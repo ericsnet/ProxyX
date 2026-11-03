@@ -1,28 +1,63 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ProxyX local proxy documentation and setup panel">
-  <title>ProxyX — Local proxy</title>
+  <meta name="description" content="ProxyX: visor web de lectura mediante un gateway HTTP autorizado.">
+  <meta name="theme-color" content="#090b10">
+  <title>ProxyX — Navegador de lectura</title>
   <link rel="stylesheet" href="./style.css">
+  <script src="./app.js" defer></script>
 </head>
 <body>
-  <header class="top"><a class="brand" href="./">Proxy<span>X</span></a><nav><a href="https://github.com/ericsnet/ProxyX">GitHub</a><a href="../README.es.md">Español</a></nav></header>
-  <main>
-    <section class="hero">
-      <p class="eyebrow">LOCAL-FIRST · HTTP / HTTPS</p>
-      <h1>Your traffic.<br><span>Your route.</span></h1>
-      <p class="lead">A local forward proxy with HTTPS tunnelling and an optional allowlisted Cloudflare Worker gateway.</p>
-      <div class="actions"><a class="primary" href="https://github.com/ericsnet/ProxyX">View source</a><a class="secondary" href="https://github.com/ericsnet/ProxyX/blob/main/README.es.md">Read the docs</a></div>
+  <header class="top">
+    <a class="brand" href="./" aria-label="ProxyX inicio">Proxy<span>X</span></a>
+    <nav>
+      <span id="gatewayStatus" class="status"><i></i><span data-i18n="checking">Comprobando gateway…</span></span>
+      <button id="languageToggle" class="language" type="button" aria-label="Change language">EN</button>
+      <a href="https://github.com/ericsnet/ProxyX" target="_blank" rel="noreferrer">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="intro">
+      <p class="eyebrow">HTTP GATEWAY · READER MODE</p>
+      <h1 data-i18n="headline">Navega con <span>ProxyX.</span></h1>
+      <p class="lead" data-i18n="lead">Introduce una dirección y carga su contenido a través de tu gateway de Cloudflare.</p>
     </section>
-    <section class="grid">
-      <article><span class="number">01</span><h2>Local engine</h2><p>Run on Windows or Linux. The listener binds to 127.0.0.1:8080 by default.</p><code>cargo run --release -p proxyx</code></article>
-      <article><span class="number">02</span><h2>HTTPS tunnel</h2><p>CONNECT support tunnels encrypted HTTPS traffic without decrypting it.</p><code>HTTP CONNECT</code></article>
-      <article><span class="number">03</span><h2>Edge gateway</h2><p>Optional Workers HTTP gateway with token authentication and a destination allowlist.</p><code>worker/</code></article>
+
+    <section class="browser" aria-label="ProxyX browser">
+      <div class="toolbar">
+        <div class="nav-buttons">
+          <button id="backButton" class="icon-button" type="button" disabled aria-label="Atrás">←</button>
+          <button id="forwardButton" class="icon-button" type="button" disabled aria-label="Adelante">→</button>
+          <button id="reloadButton" class="icon-button" type="button" aria-label="Recargar">↻</button>
+        </div>
+        <form id="addressForm" class="address-form">
+          <span class="lock">⌁</span>
+          <input id="addressInput" type="url" autocomplete="url" spellcheck="false" placeholder="https://example.com" aria-label="URL" required>
+          <button id="loadButton" class="load-button" type="submit" data-i18n="load">Cargar</button>
+        </form>
+      </div>
+
+      <div class="settings">
+        <label for="tokenInput" data-i18n="tokenLabel">Token del gateway</label>
+        <input id="tokenInput" type="password" autocomplete="off" placeholder="Bearer token" data-i18n-placeholder="tokenPlaceholder">
+        <span data-i18n="tokenHint">Se guarda solo en esta pestaña y no se envía a la web de destino.</span>
+      </div>
+
+      <div id="message" class="message" role="status" aria-live="polite" data-i18n="ready">Introduce una URL autorizada para empezar.</div>
+      <div class="viewer-head"><span id="pageTitle" data-i18n="viewer">Visor de página</span><span id="pageHost">—</span></div>
+      <iframe id="viewer" title="Contenido web cargado por ProxyX" sandbox="" referrerpolicy="no-referrer"></iframe>
     </section>
-    <section class="notice"><strong>Important</strong><p>This panel is static. It does not run a proxy in your browser. The Worker gateway is not a general TCP proxy and cannot guarantee access to every website.</p></section>
+
+    <section class="limits">
+      <div><strong data-i18n="readerTitle">Modo de lectura seguro</strong><p data-i18n="readerText">Se muestra el contenido HTML depurado. No se ejecutan scripts ni se cargan formularios, anuncios o recursos externos.</p></div>
+      <div><strong data-i18n="accessTitle">Destinos autorizados</strong><p data-i18n="accessText">El Worker aplica una lista de dominios permitidos. Ahora mismo, la configuración inicial solo incluye example.com.</p></div>
+      <div><strong data-i18n="notTitle">No es un proxy abierto</strong><p data-i18n="notText">No evita bloqueos ni controles de acceso y no garantiza que todas las páginas sean compatibles.</p></div>
+    </section>
   </main>
-  <footer>ProxyX · Open documentation · All rights reserved</footer>
+
+  <footer>ProxyX · <a href="https://github.com/ericsnet/ProxyX">Código fuente</a> · <span data-i18n="footer">Uso autorizado únicamente</span></footer>
 </body>
 </html>

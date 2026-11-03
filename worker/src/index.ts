@@ -5,6 +5,7 @@ interface Env {
 }
 
 const PRIVATE_IPV4 = /^(0\.|10\.|127\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.)/;
+const DEFAULT_CORS_ORIGINS = ["https://proxyx-2lq.pages.dev", "https://ericsnet.github.io"];
 
 function json(data: unknown, status = 200, headers: HeadersInit = {}): Response {
   return new Response(JSON.stringify(data), {
@@ -23,7 +24,8 @@ function isPublicHost(hostname: string): boolean {
 function corsHeaders(request: Request, env: Env): Headers {
   const headers = new Headers({ "vary": "Origin" });
   const origin = request.headers.get("Origin");
-  const allowed = (env.PROXYX_CORS_ORIGINS || "").split(",").map(x => x.trim()).filter(Boolean);
+  const configured = (env.PROXYX_CORS_ORIGINS || "").split(",").map(x => x.trim()).filter(Boolean);
+  const allowed = configured.length ? configured : DEFAULT_CORS_ORIGINS;
   if (origin && allowed.includes(origin)) {
     headers.set("access-control-allow-origin", origin);
     headers.set("access-control-allow-headers", "Authorization, Content-Type");
@@ -65,10 +67,10 @@ export default {
       const upstream = await fetch(target.toString(), {
         method: request.method,
         redirect: "manual",
-        headers: { "user-agent": "ProxyX-Gateway/0.1" },
+        headers: { "user-agent": "ProxyX-Gateway/0.2" },
       });
       const responseHeaders = new Headers(cors);
-      for (const name of ["content-type", "content-length", "last-modified", "etag", "cache-control"]) {
+      for (const name of ["content-type", "content-length", "last-modified", "etag"]) {
         const value = upstream.headers.get(name);
         if (value) responseHeaders.set(name, value);
       }

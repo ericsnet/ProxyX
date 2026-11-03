@@ -30,10 +30,9 @@ Variables de entorno:
 | Variable | Valor predeterminado | Descripción |
 |---|---|---|
 | `PROXYX_BIND` | `127.0.0.1:8080` | Dirección de escucha. No la expongas sin entender los riesgos. |
-| `PROXYX_ALLOW_PRIVATE` | `false` | Permite destinos privados/locales. Déjala desactivada para navegación normal. |
 | `RUST_LOG` | `proxyx=info` | Nivel de registro. |
 
-La implementación local admite solicitudes HTTP en formato absoluto y túneles HTTPS mediante `CONNECT`. No descifra el tráfico HTTPS.
+La implementación local admite solicitudes HTTP en formato absoluto y túneles HTTPS mediante `CONNECT`. No descifra el tráfico HTTPS. Actualmente, los cuerpos HTTP se almacenan en memoria durante el reenvío.
 
 ## Pasarela de Cloudflare Workers
 
@@ -67,6 +66,7 @@ El panel solo ofrece documentación y configuración. No ejecuta un proxy dentro
 ## Desarrollo
 
 ```bash
+cargo fmt --all -- --check
 cargo test --workspace
 ```
 

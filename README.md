@@ -30,10 +30,9 @@ Environment variables:
 | Variable | Default | Description |
 |---|---|---|
 | `PROXYX_BIND` | `127.0.0.1:8080` | Listener address. Keep it loopback unless you understand the exposure. |
-| `PROXYX_ALLOW_PRIVATE` | `false` | Permit private/local destination addresses. Leave disabled for normal browsing. |
 | `RUST_LOG` | `proxyx=info` | Log verbosity. |
 
-The local implementation supports standard absolute-form HTTP requests and HTTPS `CONNECT` tunnels. It does not decrypt HTTPS traffic.
+The local implementation supports standard absolute-form HTTP requests and HTTPS `CONNECT` tunnels. It does not decrypt HTTPS traffic. HTTP request and response bodies are currently buffered in memory.
 
 ## Cloudflare Worker gateway
 
@@ -67,6 +66,7 @@ The panel is documentation/configuration UI only. It does not run a proxy inside
 ## Development
 
 ```bash
+cargo fmt --all -- --check
 cargo test --workspace
 ```
 

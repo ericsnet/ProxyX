@@ -9,8 +9,8 @@ use hyper_util::rt::TokioIo;
 use log::{info, warn};
 use std::convert::Infallible;
 use std::env;
-use tokio::net::{TcpListener, TcpStream};
 use tokio::io::copy_bidirectional;
+use tokio::net::{TcpListener, TcpStream};
 use url::Url;
 
 type ResponseBody = Full<Bytes>;
@@ -98,8 +98,8 @@ async fn handle(mut request: Request<Incoming>) -> Result<Response<ResponseBody>
                 out.append(name, value.clone());
             }
         }
-        if let Some(host) = parsed.host_str() {
-            if let Ok(value) = host.parse() { out.insert(HOST, value); }
+        if let Some(authority) = parsed[url::Position::BeforePath..url::Position::AfterHost].split('@').last() {
+            if let Ok(value) = authority.parse() { out.insert(HOST, value); }
         }
     }
     let outbound = match builder.body(Full::new(body)) {

@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
@@ -9,6 +9,7 @@ use hyper_util::rt::TokioIo;
 use log::{info, warn};
 use std::convert::Infallible;
 use std::env;
+use std::net::SocketAddr;
 use tokio::io::copy_bidirectional;
 use tokio::net::{TcpListener, TcpStream};
 use url::Url;
@@ -20,12 +21,13 @@ async fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("proxyx=info")).init();
 
     let bind = env::var("PROXYX_BIND").unwrap_or_else(|_| "127.0.0.1:8080".into());
-    if !bind.starts_with("127.0.0.1:") && !bind.starts_with("[::1]:") {
-        warn!("Non-loopback bind requested. ProxyX is unauthenticated; this can expose an open proxy.");
+    let address: SocketAddr = bind.parse().context("PROXYX_BIND must be a socket address")?;
+    if !address.ip().is_loopback() {
+        bail!("ProxyX currently only permits loopback binding. Remote access requires authentication and destination controls.");
     }
 
-    let listener = TcpListener::bind(&bind).await.context("Could not bind proxy listener")?;
-    info!("ProxyX listening on http://{bind}");
+    let listener = TcpListener::bind(address).await.context("Could not bind proxy listener")?;
+    info!("ProxyX listening on http://{address}");
     loop {
         let (stream, peer) = listener.accept().await?;
         tokio::spawn(async move {
@@ -48,19 +50,25 @@ async fn handle(mut request: Request<Incoming>) -> Result<Response<ResponseBody>
         let Some(authority) = authority else {
             return Ok(response(StatusCode::BAD_REQUEST, "CONNECT requires host:port"));
         };
+
+        let upstream = match TcpStream::connect(&authority).await {
+            Ok(stream) => stream,
+            Err(error) => {
+                warn!("Could not connect to {authority}: {error}");
+                return Ok(response(StatusCode::BAD_GATEWAY, "Could not connect to destination"));
+            }
+        };
         let on_upgrade = hyper::upgrade::on(&mut request);
         tokio::spawn(async move {
-            match TcpStream::connect(&authority).await {
-                Ok(mut upstream) => match on_upgrade.await {
-                    Ok(upgraded) => {
-                        let mut downstream = TokioIo::new(upgraded);
-                        if let Err(error) = copy_bidirectional(&mut downstream, &mut upstream).await {
-                            warn!("Tunnel ended: {error}");
-                        }
+            match on_upgrade.await {
+                Ok(upgraded) => {
+                    let mut downstream = TokioIo::new(upgraded);
+                    let mut upstream = upstream;
+                    if let Err(error) = copy_bidirectional(&mut downstream, &mut upstream).await {
+                        warn!("Tunnel ended: {error}");
                     }
-                    Err(error) => warn!("CONNECT upgrade failed: {error}"),
-                },
-                Err(error) => warn!("Could not connect to {authority}: {error}"),
+                }
+                Err(error) => warn!("CONNECT upgrade failed: {error}"),
             }
         });
         let mut response = Response::new(Full::new(Bytes::new()));
@@ -78,9 +86,9 @@ async fn handle(mut request: Request<Incoming>) -> Result<Response<ResponseBody>
         _ => return Ok(response(StatusCode::BAD_REQUEST, "Use an absolute http:// URL or CONNECT for HTTPS")),
     };
 
-    if parsed.host_str().is_none() {
+    let Some(hostname) = parsed.host_str() else {
         return Ok(response(StatusCode::BAD_REQUEST, "Target URL has no host"));
-    }
+    };
 
     let method = request.method().clone();
     let version = request.version();
@@ -90,6 +98,14 @@ async fn handle(mut request: Request<Incoming>) -> Result<Response<ResponseBody>
         Err(_) => return Ok(response(StatusCode::BAD_REQUEST, "Could not read request body")),
     };
 
+    let mut host_header = hostname.to_owned();
+    if host_header.contains(':') {
+        host_header = format!("[{host_header}]");
+    }
+    if let Some(port) = parsed.port() {
+        host_header.push_str(&format!(":{port}"));
+    }
+
     let mut builder = Request::builder().method(method).uri(target).version(version);
     if let Some(out) = builder.headers_mut() {
         for (name, value) in headers.iter() {
@@ -98,8 +114,8 @@ async fn handle(mut request: Request<Incoming>) -> Result<Response<ResponseBody>
                 out.append(name, value.clone());
             }
         }
-        if let Some(authority) = parsed[url::Position::BeforePath..url::Position::AfterHost].split('@').last() {
-            if let Ok(value) = authority.parse() { out.insert(HOST, value); }
+        if let Ok(value) = host_header.parse() {
+            out.insert(HOST, value);
         }
     }
     let outbound = match builder.body(Full::new(body)) {

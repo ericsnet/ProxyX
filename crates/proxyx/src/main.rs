@@ -76,7 +76,7 @@ async fn handle(mut request: Request<Incoming>) -> Result<Response<ResponseBody>
         return Ok(response);
     }
 
-    if request.method() == Method::TRACE || request.method() == Method::TRACK {
+    if request.method() == Method::TRACE {
         return Ok(response(StatusCode::METHOD_NOT_ALLOWED, "Method not supported"));
     }
 

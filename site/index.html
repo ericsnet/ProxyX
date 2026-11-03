@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ProxyX local proxy documentation and setup panel">
+  <title>ProxyX — Local proxy</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="top"><a class="brand" href="./">Proxy<span>X</span></a><nav><a href="https://github.com/ericsnet/ProxyX">GitHub</a><a href="../README.es.md">Español</a></nav></header>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">LOCAL-FIRST · HTTP / HTTPS</p>
+      <h1>Your traffic.<br><span>Your route.</span></h1>
+      <p class="lead">A local forward proxy with HTTPS tunnelling and an optional allowlisted Cloudflare Worker gateway.</p>
+      <div class="actions"><a class="primary" href="https://github.com/ericsnet/ProxyX">View source</a><a class="secondary" href="https://github.com/ericsnet/ProxyX/blob/main/README.es.md">Read the docs</a></div>
+    </section>
+    <section class="grid">
+      <article><span class="number">01</span><h2>Local engine</h2><p>Run on Windows or Linux. The listener binds to 127.0.0.1:8080 by default.</p><code>cargo run --release -p proxyx</code></article>
+      <article><span class="number">02</span><h2>HTTPS tunnel</h2><p>CONNECT support tunnels encrypted HTTPS traffic without decrypting it.</p><code>HTTP CONNECT</code></article>
+      <article><span class="number">03</span><h2>Edge gateway</h2><p>Optional Workers HTTP gateway with token authentication and a destination allowlist.</p><code>worker/</code></article>
+    </section>
+    <section class="notice"><strong>Important</strong><p>This panel is static. It does not run a proxy in your browser. The Worker gateway is not a general TCP proxy and cannot guarantee access to every website.</p></section>
+  </main>
+  <footer>ProxyX · Open documentation · All rights reserved</footer>
+</body>
+</html>

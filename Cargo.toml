@@ -1,0 +1,9 @@
+[workspace]
+members = ["crates/proxyx"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "LicenseRef-ProxyX-Proprietary"
+version = "0.1.0"
+authors = ["ericsnet"]

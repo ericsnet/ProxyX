@@ -1,0 +1,7 @@
+name = "proxyx-gateway"
+main = "src/index.ts"
+compatibility_date = "2026-11-03"
+
+[vars]
+PROXYX_ALLOWED_HOSTS = "example.com"
+PROXYX_CORS_ORIGINS = ""
